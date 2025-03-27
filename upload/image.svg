@@ -1,0 +1,3 @@
+<script>
+console.log("image.js xss")
+</script>
