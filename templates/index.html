@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- Bootstrap CSS via CDN with SRI -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+        rel="stylesheet">
+  <!-- External CSS for custom styles -->
+  <link rel="stylesheet" href="/public/style.css">
+  <title>XSS Demo with Configurable Security Headers</title>
+</head>
+<body class="container mt-5">
+  <h1 class="mb-4">XSS Demo with Configurable Security Headers</h1>
+  <form method="get" action="/">
+    <div class="mb-3">
+      <label for="msg" class="form-label">Enter message (XSS payload):</label>
+      <input type="text" class="form-control" id="msg" name="msg" 
+             placeholder="Enter message" value="{{ request.args.get('msg', '') }}">
+    </div>
+    <fieldset class="mb-3">
+      <legend class="col-form-label pt-0">Security Headers:</legend>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_csp" name="enable_csp" 
+               {% if request.args.get('enable_csp') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_csp">Content Security Policy (CSP)</label>
+      </div>
+      <div class="mb-3">
+        <label for="csp_value" class="form-label">Custom CSP Header Value:</label>
+        <input type="text" class="form-control" id="csp_value" name="csp_value" 
+               placeholder="Enter CSP header value" 
+               value="{{ request.args.get('csp_value', "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; img-src data:") }}"
+               {% if not request.args.get('enable_csp') %}disabled{% endif %}>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_nonce" name="enable_nonce"
+               {% if request.args.get('enable_nonce') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_nonce">Random Nonce for CSP &amp; Scripts</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_xcto" name="enable_xcto" 
+               {% if request.args.get('enable_xcto') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_xcto">X-Content-Type-Options (nosniff)</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_xss" name="enable_xss" 
+               {% if request.args.get('enable_xss') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_xss">X-XSS-Protection</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_cors" name="enable_cors" 
+               {% if request.args.get('enable_cors') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_cors">CORS Headers</label>
+      </div>
+      <div class="mb-3">
+        <label for="cors_value" class="form-label">Custom Access-Control-Allow-Origin Value:</label>
+        <input type="text" class="form-control" id="cors_value" name="cors_value" 
+               placeholder="Enter CORS header value" 
+               value="{{ request.args.get('cors_value', '*') }}"
+               {% if not request.args.get('enable_cors') %}disabled{% endif %}>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="true" id="enable_cookie_secure" name="enable_cookie_secure" 
+               {% if request.args.get('enable_cookie_secure') %}checked{% endif %}>
+        <label class="form-check-label" for="enable_cookie_secure">Secure Cookie (HttpOnly, Secure, SameSite)</label>
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+  
+  <div class="mt-4 p-4 border bg-light">
+    <h3>Output (Unsafe Rendering):</h3>
+    <div id="display">{{ user_input|safe }}</div>
+  </div>
+
+  <div class="mt-4 p-4 border bg-light">
+    <h3>Raw Input (Escaped):</h3>
+    <div id="raw-display">{{ user_input }}</div>
+  </div>
+  
+  <div class="mt-4">
+    <p class="text-muted">
+      Try submitting a payload like: <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>
+    </p>
+    <p class="text-muted">
+      Use the checkboxes to choose which security headers are applied, and optionally provide custom values for CSP and CORS.
+    </p>
+  </div>
+  
+  <!-- Bootstrap JS via CDN with SRI -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- External JavaScript with nonce if generated -->
+  <script src="/public/script.js" {% if nonce %}nonce="{{ nonce }}"{% endif %}></script>
+</body>
+</html>

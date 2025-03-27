@@ -1,0 +1,4 @@
+/* Use monospace font for all text input fields */
+input[type="text"] {
+    font-family: monospace;
+}
